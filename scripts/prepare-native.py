@@ -152,7 +152,8 @@ def prepare(source, destination):
         native = resources / 'codex-cockpit'; native.mkdir()
         for name in ('host.cjs', 'renderer.js', 'style.css'):
             shutil.copy2(repo / 'native' / name, native / name)
-        shutil.copy2(repo / 'src/sessions.mjs', native / 'sessions.mjs')
+        for name in ('sessions.mjs', 'nay.mjs'):
+            shutil.copy2(repo / 'src' / name, native / name)
         manifest = {'codexVersion': VERSION, 'cockpitVersion': json.loads((repo / 'package.json').read_text())['version'], 'source': str(source), 'mode': 'native-local-copy', 'sourceHashes': HASHES}
         (staging / 'cockpit-install.json').write_text(json.dumps(manifest, indent=2) + '\n')
         launcher = staging / 'launch-cockpit'

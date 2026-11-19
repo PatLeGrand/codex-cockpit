@@ -17,7 +17,7 @@ export function serveMcp(cockpit, input = process.stdin, output = process.stdout
     const error = (code, message) => send({ jsonrpc: '2.0', id: req.id, error: { code, message } });
     try {
       switch (req.method) {
-        case 'initialize': return reply({ protocolVersion: '2024-11-05', capabilities: { tools: {} }, serverInfo: { name: 'codex-cockpit', version: '0.3.2' } });
+        case 'initialize': return reply({ protocolVersion: '2024-11-05', capabilities: { tools: {} }, serverInfo: { name: 'codex-cockpit', version: '0.4.0' } });
         case 'ping': return reply({});
         case 'tools/list': return reply({ tools });
         case 'tools/call': {

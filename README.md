@@ -3,11 +3,11 @@
 Une barre au-dessus du champ de saisie de **Codex Desktop**, pour voir uniquement :
 
 - le contexte estimé de la session ouverte (tokens et pourcentage) ;
-- ses sous-agents, leur nombre et leur état, accessibles par la flèche.
+- ses agents actifs, natifs Codex et Nay, accessibles par la flèche.
 
-Le nombre total inclut les sous-agents terminés ; le nombre actif est indiqué séparément. La barre suit l’identifiant de la conversation ouverte. Aucun sélecteur de sessions, suivi de la session la plus récente, fichier, commande ou journal d’activité n’est affiché ni renvoyé par l’API.
+La barre et le panneau affichent uniquement les agents actifs : les agents terminés sont exclus du compteur et de la liste. La barre suit l’identifiant de la conversation ouverte. Aucun sélecteur de sessions, suivi de la session la plus récente, fichier, commande ou journal d’activité n’est affiché ni renvoyé par l’API.
 
-Projet communautaire indépendant, sans affiliation avec OpenAI. **Version 0.3.2**.
+Projet communautaire indépendant, sans affiliation avec OpenAI. **Version 0.4.0**.
 
 ## Installation native Linux
 
@@ -43,11 +43,17 @@ Si le service web s’arrête, rouvre le Cockpit depuis la conversation pour obt
 
 Le contexte est estimé à partir de `last_token_usage.total_tokens / model_context_window`. Le cumul des tokens ne représente pas l’occupation du contexte. Les données absentes restent indisponibles.
 
-Les sous-agents sont reliés par `parent_thread_id`, descendants inclus. Leur état provient des derniers événements de tour ; un état en cours sans événement depuis deux minutes est signalé comme non confirmé.
+Les sous-agents natifs sont reliés par `parent_thread_id`, descendants inclus. Leur état provient des derniers événements de tour ; un état en cours sans événement depuis deux minutes est signalé comme non confirmé.
 
 La lecture incrémentale concerne `$CODEX_HOME/sessions` (par défaut `~/.codex/sessions`), jusqu’à 160 journaux récents, avec actualisation toutes les deux secondes. Les formats paginés, distants ou modifiés par une mise à jour de Codex peuvent être incomplets.
 
 Le plugin ne transmet rien à un service externe et n’expose ni prompts, ni noms de projets, ni chemins, ni appels d’outils. Le mode web protège les métriques par un jeton local éphémère. Ne partage pas son URL.
+
+## Agents Nay
+
+Sur Linux, le Cockpit détecte les processus `nay run`, `nay story` et `nay resume` qui héritent de `CODEX_THREAD_ID` ou `CODEX_SESSION_ID`. Seuls les processus liés au chat ouvert ou à ses sous-agents explicites sont inclus. Les noms proviennent de la commande `run` ou des modèles des processus enfants, associés à la configuration locale de Nay. Les wrappers CLI sont dédupliqués. Un processus disparu ou zombie ne compte plus comme actif.
+
+L’intégration ne démarre aucun agent, ne modifie pas Nay et ne dépend pas de son interface web. Les appels Nay lancés hors d’un chat Codex identifiable, notamment depuis son UI indépendante, ne sont pas attribués arbitrairement à la conversation courante. Une restriction d’accès aux processus est signalée dans le panneau.
 
 ## Maintenance
 

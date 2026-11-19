@@ -11,3 +11,6 @@
 - [ ] Ajouter des profils de compatibilité pour les prochaines versions de Codex et d'autres systèmes.
 - [x] Limiter le plugin au contexte de la session ouverte et à ses sous-agents, sans sélecteur ni activité de projet.
 - [ ] Ajouter une interface anglaise et des contrôles d'affichage.
+
+- [x] Compteur et liste limités aux agents actifs.
+- [x] Détection Nay run/story/resume par identifiant de chat hérité et ascendance des processus sur Linux.

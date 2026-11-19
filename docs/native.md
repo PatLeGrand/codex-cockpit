@@ -42,3 +42,7 @@ Tests Node du pont isolé, tests Python du réassemblage ASAR et du refus des ve
 Le lanceur de la copie complète doit encore être utilisé après fermeture de la session courante pour valider le résultat dans le profil réel. Le préparateur ne ferme jamais une application en cours et ne redémarre pas Codex à ta place.
 
 Pour refaire l'essai visuel du renderer : `node scripts/native-preview.mjs`. La page est explicitement signalée comme un banc de test. `scripts/electron-smoke.cjs` est un point d'entrée réservé à une archive de test Electron distincte ; ne pas le charger dans le processus Codex actif.
+
+## Nay
+
+Le module `nay.mjs`, copié avec l’adaptateur, inspecte uniquement les processus appartenant à l’utilisateur sur Linux. Il utilise les identifiants de session hérités et l’ascendance des processus. Les agents Nay actifs apparaissent dans le même compteur que les sous-agents Codex et portent la mention Nay dans le panneau. Aucun appel au serveur Nay ni modification de sa configuration n’est nécessaire.

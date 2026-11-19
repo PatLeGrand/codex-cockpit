@@ -34,6 +34,7 @@ function render(data) {
   if (data.source === 'demo') notes.push('Démonstration : ces données sont fictives. Lance sans --demo pour lire Codex.');
   if (s?.stale) notes.push('Aucun événement récent : l’agent peut être inactif. État issu du journal.');
   if (s?.partial || s?.catchingUp) notes.push('Lecture du journal en cours ou incomplète ; certaines données peuvent manquer.');
+  if (data.nay?.available === false) notes.push('Détection des processus Nay indisponible.');
   if (data.unreadable) notes.push(`${data.unreadable} journal(aux) inaccessible(s).`);
   $('notice').hidden = !notes.length; $('notice').textContent = notes.join(' ');
   const percent = s?.context?.percent;
@@ -41,17 +42,17 @@ function render(data) {
   meter('bar-meter', percent); meter('detail-meter', percent);
   $('bar-percent').textContent = pct; $('detail-percent').textContent = pct;
   $('bar-tokens').textContent = compact(s?.context?.used);
-  const active = data.agents.filter(a => a.status === 'running' && !a.stale).length;
-  const total = data.agents.length;
-  $('bar-agents').textContent = !s ? '— sous-agent' : `${total} sous-agent${total > 1 ? 's' : ''}${total ? ` · ${active} actif${active > 1 ? 's' : ''}` : ''}`;
+  const agents = data.agents.filter(a => a.status === 'running' && !a.stale);
+  const active = agents.length;
+  $('bar-agents').textContent = !s ? '— agent actif' : `${active} agent${active > 1 ? 's' : ''} actif${active > 1 ? 's' : ''}`;
   $('context-numbers').textContent = s?.context?.used != null ? `${compact(s.context.used)} / ${compact(s.context.window)} tokens · dernier appel observé` : 'Mesure de contexte indisponible';
-  $('agents-total').textContent = data.agents.length;
-  list('agents', data.agents, agent => {
+  $('agents-total').textContent = active;
+  list('agents', agents, agent => {
     const el = text('li', '');
     el.append(activityRow(agent, agent.name, elapsed(agent.startedAt, agent.status === 'running' ? Date.now() : agent.updatedAt), 'div'));
     el.append(text('div', [agent.role, agent.stale ? 'sans événement récent' : stateLabels[agent.status]].filter(Boolean).join(' · '), 'agent-role'));
     return el;
-  }, 'Aucun sous-agent observé pour cette conversation.');
+  }, 'Aucun agent actif pour cette session.');
   $('updated').textContent = `Actualisé à ${new Date(data.generatedAt).toLocaleTimeString('fr')} · lecture locale`;
 }
 function setOpen(open) { $('cockpit').hidden = !open; $('toggle').setAttribute('aria-expanded', String(open)); $('arrow').textContent = open ? '▾' : '◂'; localStorage.setItem('cockpit-open', String(open)); }

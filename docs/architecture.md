@@ -16,3 +16,5 @@
 - Le mode natif utilise un adaptateur local lié à une version précise de l'application ; il ne constitue pas une API de plugin officielle. Voir [intégration native](native.md).
 
 Pour maintenir l'adaptateur, ajouter un cas synthétique au lecteur et tester le format avant de changer son interprétation. Ne jamais inclure de journaux réels dans le dépôt.
+
+`src/nay.mjs` complète les agents natifs avec les processus Nay actifs explicitement rattachés à la session. Les appels run portent le nom demandé ; story et resume identifient les CLI enfants et leurs modèles via la configuration locale de Nay. L’API expose seulement leur identité, leur état et leur origine, sans arguments bruts ni environnement. Le compteur et la liste ignorent les agents terminés ou dont l’état natif est ancien.

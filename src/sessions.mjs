@@ -2,6 +2,7 @@ import { readdir, stat, open } from 'node:fs/promises';
 import path from 'node:path';
 import { createReadStream } from 'node:fs';
 import { createInterface } from 'node:readline';
+import { NayMonitor } from './nay.mjs';
 
 const MAX_FILES = 160;
 const MAX_LINE = 4 * 1024 * 1024;
@@ -60,7 +61,7 @@ async function discover(root) {
 }
 
 export class SessionStore {
-  constructor(root) { this.root = root; this.cache = new Map(); }
+  constructor(root, { nay = new NayMonitor() } = {}) { this.root = root; this.cache = new Map(); this.nay = nay; }
   async read(file) {
     const st = await stat(file);
     let cached = this.cache.get(file);
@@ -111,10 +112,12 @@ export class SessionStore {
       // Log state is historical evidence, not proof a process is still alive.
       return { ...publicSession, stale: s.status === 'running' && Date.now() - (s.updatedAt ?? 0) > 120_000 };
     };
+    const nay = await this.nay.active(descendants);
     return {
       generatedAt: Date.now(), source: 'local-rollout', maxSessions: MAX_FILES, unreadable,
       selected: selected ? clean(selected) : null,
-      agents: sessions.filter(s => s.id !== selected?.id && descendants.has(s.id)).map(clean),
+      agents: [...sessions.filter(s => s.id !== selected?.id && descendants.has(s.id)).map(s => ({ ...clean(s), source: 'codex' })), ...nay.agents],
+      nay: { available: nay.available },
     };
   }
 }

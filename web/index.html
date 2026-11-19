@@ -6,13 +6,13 @@
     <header class="masthead"><span class="brand">◈ <strong>CODEX COCKPIT</strong></span><span id="connection" role="status">Connexion…</span></header>
     <p id="notice" role="status" hidden></p>
     <button class="context-bar" id="toggle" aria-expanded="false" aria-controls="cockpit">
-      <span class="meter" id="bar-meter" aria-hidden="true"></span><strong id="bar-percent">—</strong><span id="bar-tokens">Contexte</span><span class="separator">·</span><span class="agent-count" id="bar-agents">— sous-agent</span><span class="arrow" id="arrow">◂</span>
+      <span class="meter" id="bar-meter" aria-hidden="true"></span><strong id="bar-percent">—</strong><span id="bar-tokens">Contexte</span><span class="separator">·</span><span class="agent-count" id="bar-agents">— agent actif</span><span class="arrow" id="arrow">◂</span>
     </button>
     <aside id="cockpit" hidden aria-label="Cockpit">
       <div class="panel-header"><h1>Cockpit</h1><div><button id="expand" aria-label="Agrandir le panneau" title="Agrandir">⤢</button><button id="close" aria-label="Fermer le panneau">×</button></div></div>
       <div class="panel-content">
         <section aria-labelledby="context-title"><h2 id="context-title">Contexte <span class="badge">ESTIMATION</span></h2><div class="context-detail"><span id="detail-meter" class="meter" aria-hidden="true"></span><strong id="detail-percent">—</strong></div><p id="context-numbers">En attente des données</p></section>
-        <section aria-labelledby="agents-title"><h2 id="agents-title">Sous-agents de cette session <span id="agents-total" class="count">0</span></h2><ul id="agents"></ul></section>
+        <section aria-labelledby="agents-title"><h2 id="agents-title">Agents actifs de cette session <span id="agents-total" class="count">0</span></h2><ul id="agents"></ul></section>
       </div>
       <footer><span class="live-dot"></span><span id="updated">Actualisation locale · toutes les 2 s</span></footer>
     </aside>
