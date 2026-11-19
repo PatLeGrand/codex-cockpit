@@ -1,0 +1,10 @@
+{
+  "name": "patlegrand-cockpit",
+  "interface": { "displayName": "Codex Cockpit" },
+  "plugins": [{
+    "name": "codex-cockpit",
+    "source": { "source": "local", "path": "./" },
+    "policy": { "installation": "AVAILABLE", "authentication": "ON_INSTALL" },
+    "category": "Productivity"
+  }]
+}
