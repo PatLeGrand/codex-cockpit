@@ -1,83 +1,54 @@
 # Codex Cockpit
 
-Un Cockpit local pour **Codex Desktop** : barre de contexte compacte, petite flèche pour ouvrir les détails, agents, fichiers et activité récente. Projet communautaire indépendant, sans affiliation avec OpenAI.
+Une barre au-dessus du champ de saisie de **Codex Desktop**, pour voir uniquement :
 
-**v0.2.0 : intégration au-dessus du champ de saisie natif sur Linux.** La flèche ouvre le panneau Cockpit dans la même fenêtre. Cette intégration utilise une copie locale modifiée de Codex, avec un adaptateur vérifié pour la version `26.1027.30824`. Le mode compagnon et le plugin MCP restent disponibles.
+- le contexte estimé de la session ouverte (tokens et pourcentage) ;
+- ses sous-agents, leur nombre et leur état, accessibles par la flèche.
 
-## Barre dans Codex Desktop
+Le nombre total inclut les sous-agents terminés ; le nombre actif est indiqué séparément. La barre suit l’identifiant de la conversation ouverte. Aucun sélecteur de sessions, suivi de la session la plus récente, fichier, commande ou journal d’activité n’est affiché ni renvoyé par l’API.
 
-Prérequis : Linux, Python 3.9+, Codex Desktop `26.1027.30824` installé dans `/usr/lib/chatgpt`. La préparation ne nécessite pas Node ; l'adaptateur utilise le runtime intégré de Codex.
+Projet communautaire indépendant, sans affiliation avec OpenAI. **Version 0.3.0**.
 
-```bash
-python3 scripts/prepare-native.py --check
-python3 scripts/prepare-native.py --destination "$PWD/../codex-cockpit-desktop"
-```
+## Installation native Linux
 
-Ferme complètement Codex Desktop, puis lance la copie préparée :
-
-```bash
-../codex-cockpit-desktop/launch-cockpit
-```
-
-La barre apparaît au-dessus du composeur d'une conversation Codex. Clique sur sa flèche pour afficher les agents, fichiers et outils dans le panneau. Elle suit la conversation ouverte et ne lit ni ne modifie le brouillon. Le mode natif ne démarre aucun serveur HTTP.
-
-L'application système reste intacte. Pour revenir à Codex d'origine, ferme la copie et utilise le lanceur habituel. Après une mise à jour de Codex, vérifie la compatibilité avant de recréer la copie dans un nouveau dossier. Les versions non reconnues sont refusées avant toute création de fichier. Voir [installation native et limites](docs/native.md).
-
-![Barre et panneau natifs dans un banc de test aux données fictives](docs/native-preview.png)
-
-## Démarrage
-
-Prérequis : Node.js 22 ou plus, Codex Desktop avec des sessions locales.
+Prérequis : Python 3.9+, Codex Desktop `26.1027.30824` installé dans `/usr/lib/chatgpt`.
 
 ```bash
 git clone https://github.com/PatLeGrand/codex-cockpit.git
 cd codex-cockpit
-node src/cli.mjs
+python3 scripts/prepare-native.py --check
+python3 scripts/prepare-native.py --destination "$PWD/../codex-cockpit-desktop"
 ```
 
-Ouvre l'URL affichée. Clique sur la petite flèche à droite de la barre pour ouvrir le Cockpit. Pas de dépendance à installer ni de clé API à configurer. Le serveur écoute exclusivement sur `127.0.0.1`, sur un port libre ; `--port 4318` fixe le port. Arrêt avec `Ctrl+C`.
+Ferme complètement Codex, puis lance `../codex-cockpit-desktop/launch-cockpit`. La copie locale contient l’intégration native ; l’application d’origine reste disponible avec son lanceur habituel. L’activation dans le profil réel doit être vérifiée après relance. Le préparateur refuse les versions inconnues et les dossiers de destination existants.
+
+Le mode natif utilise le runtime intégré à Codex et ne dépend d’aucun serveur web local. Voir [installation native](docs/native.md).
+
+![Contexte et sous-agents dans un composeur synthétique](docs/native-preview.png)
+
+## Outils MCP et aperçu facultatifs
+
+Le dépôt contient aussi un plugin MCP local pour consulter ces mêmes métriques. Ajoute le catalogue avec `codex plugin marketplace add PatLeGrand/codex-cockpit`, puis installe le plugin dans Codex Desktop. La compatibilité du catalogue dépend de la version de Codex.
+
+Les outils `open_cockpit` et `cockpit_snapshot` exigent tous deux l’identifiant `session` du chat courant. Ils ne choisissent jamais une autre conversation par défaut. Le panneau web facultatif nécessite Node.js 22+ :
 
 ```bash
-node src/cli.mjs --demo # aperçu avec données fictives, signalé dans l'interface
-npm test                # tests Node + Python
+node src/cli.mjs --session ID_DE_LA_CONVERSATION
+node src/cli.mjs --demo # aperçu explicitement signalé comme fictif
 ```
 
-## Plugin Codex Desktop
+Si le service web s’arrête, rouvre le Cockpit depuis la conversation pour obtenir une nouvelle connexion. Cet arrêt n’affecte pas la barre native.
 
-Ce mode ouvre le panneau compagnon dans un onglet ; pour la barre native, utilise la procédure précédente. Le dépôt fournit un manifeste de compatibilité Codex, un catalogue et un serveur MCP local stdio. Ajoute le catalogue :
+## Données et limites
 
-```bash
-codex plugin marketplace add PatLeGrand/codex-cockpit
-```
+Le contexte est estimé à partir de `last_token_usage.total_tokens / model_context_window`. Le cumul des tokens ne représente pas l’occupation du contexte. Les données absentes restent indisponibles.
 
-Redémarre Codex Desktop, ouvre les plugins, sélectionne la source **Codex Cockpit**, puis installe **codex-cockpit**. Demande ensuite « Ouvre le Cockpit pour cette conversation ». Le skill récupère l'URL privée et utilise l'outil d'ouverture du panneau navigateur lorsqu'il est disponible.
+Les sous-agents sont reliés par `parent_thread_id`, descendants inclus. Leur état provient des derniers événements de tour ; un état en cours sans événement depuis deux minutes est signalé comme non confirmé.
 
-La découverte et l'installation dans le catalogue sont à valider sur chaque version de Codex Desktop. Le serveur MCP et le panneau se testent aussi indépendamment avec les commandes ci-dessus. Le plugin doit tourner sur la machine où sont les journaux : une connexion MCP distante ne donne pas accès aux sessions locales.
+La lecture incrémentale concerne `$CODEX_HOME/sessions` (par défaut `~/.codex/sessions`), jusqu’à 160 journaux récents, avec actualisation toutes les deux secondes. Les formats paginés, distants ou modifiés par une mise à jour de Codex peuvent être incomplets.
 
-Outils exposés : `open_cockpit` renvoie l'URL du panneau ; `cockpit_snapshot` renvoie les métriques observées, avec un paramètre optionnel `session` pour choisir une conversation.
-
-## Données affichées
-
-| Élément | Source et limite |
-| --- | --- |
-| Contexte | Estimation depuis `last_token_usage.total_tokens / model_context_window`. Le cumul de tokens n'est jamais utilisé comme occupation de contexte. |
-| Agents | Sessions reliées explicitement par `parent_thread_id`, descendants inclus. Pas de rapprochement par dossier ou par heure. |
-| État | Derniers événements `task_started`, `task_complete`, `turn_aborted`. Un état en cours sans événement depuis 2 minutes est marqué ancien. |
-| Durée | Début du dernier tour observé, fin au dernier événement pour les tours terminés. |
-| Fichiers | Chemins explicites des outils d'écriture et en-têtes `apply_patch`. Les modifications dans des commandes shell ou des appels imbriqués ne sont pas détectées. |
-| Activité | Noms et résultats structurés des appels d'outils. Les erreurs dans du texte libre peuvent ne pas être reconnues. |
-| Quotas | Pourcentages utilisés des fenêtres de limitation, si présents dans le journal. |
-
-Les coûts monétaires ne sont pas affichés : les journaux ne fournissent pas de facture fiable. Les métriques absentes restent indisponibles. Les noms d'agents ne sont affichés que s'ils sont fournis ; sinon leur identifiant est utilisé.
-
-Lecture incrémentale de `$CODEX_HOME/sessions` (par défaut `~/.codex/sessions`), jusqu'à 160 journaux récents, actualisation toutes les 2 secondes. Les gros journaux peuvent nécessiter plusieurs cycles. Le format des journaux est un adaptateur expérimental, susceptible de changer avec Codex. Les sessions stockées exclusivement ailleurs, paginées hors de ces journaux ou exécutées à distance peuvent être absentes.
-
-## Confidentialité
-
-Le serveur ne modifie pas les conversations et ne lance pas de tâche Codex. Il ne transmet rien à un service externe. L'accès aux métriques nécessite le jeton aléatoire fourni dans le fragment de l'URL ; le navigateur l'envoie dans un en-tête local. Ne partage pas cette URL. Les conversations, instructions et résultats bruts ne sont pas exposés par l'API. Des noms d'outils, chemins et identifiants de sessions peuvent être visibles dans le panneau.
+Le plugin ne transmet rien à un service externe et n’expose ni prompts, ni noms de projets, ni chemins, ni appels d’outils. Le mode web protège les métriques par un jeton local éphémère. Ne partage pas son URL.
 
 ## Maintenance
 
-Voir [architecture](docs/architecture.md) et [feuille de route](docs/roadmap.md). Les correctifs passent par une pull request ; la CI teste Node 22 et 24. Rapporte les problèmes de compatibilité en indiquant la version de Codex, ton système et un exemple synthétique, sans joindre tes journaux privés.
-
-Documentation de référence : [plugins Codex](https://developers.openai.com/plugins/build/plugins), [App Server](https://learn.chatgpt.com/docs/app-server). Licence MIT.
+`npm test` exécute les tests Node et Python. La CI vérifie Node 22 et 24. Voir [architecture](docs/architecture.md), [intégration native](docs/native.md) et [feuille de route](docs/roadmap.md). Rapporte les problèmes avec des exemples synthétiques, sans joindre tes journaux privés. Licence MIT.

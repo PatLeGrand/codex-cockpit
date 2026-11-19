@@ -4,21 +4,18 @@
 <body>
   <main>
     <header class="masthead"><span class="brand">◈ <strong>CODEX COCKPIT</strong></span><span id="connection" role="status">Connexion…</span></header>
-    <div class="toolbar"><label for="session">Conversation</label><select id="session"><option>Chargement…</option></select><button id="follow" title="Suivre la conversation la plus récente">Suivre la récente</button></div>
     <p id="notice" role="status" hidden></p>
     <button class="context-bar" id="toggle" aria-expanded="false" aria-controls="cockpit">
-      <span class="meter" id="bar-meter" aria-hidden="true"></span><strong id="bar-percent">—</strong><span id="bar-tokens">Contexte</span><span class="separator">·</span><span id="bar-time">—</span><span class="separator">·</span><span class="agent-count" id="bar-agents">0 agent</span><span class="arrow" id="arrow">◂</span>
+      <span class="meter" id="bar-meter" aria-hidden="true"></span><strong id="bar-percent">—</strong><span id="bar-tokens">Contexte</span><span class="separator">·</span><span class="agent-count" id="bar-agents">— sous-agent</span><span class="arrow" id="arrow">◂</span>
     </button>
     <aside id="cockpit" hidden aria-label="Cockpit">
       <div class="panel-header"><h1>Cockpit</h1><div><button id="expand" aria-label="Agrandir le panneau" title="Agrandir">⤢</button><button id="close" aria-label="Fermer le panneau">×</button></div></div>
       <div class="panel-content">
-        <section aria-labelledby="context-title"><h2 id="context-title">Contexte <span class="badge">ESTIMATION</span></h2><div class="context-detail"><span id="detail-meter" class="meter" aria-hidden="true"></span><strong id="detail-percent">—</strong></div><p id="context-numbers">En attente des données</p><p id="model" class="muted"></p><p id="quotas" class="muted"></p></section>
-        <section aria-labelledby="agents-title"><h2 id="agents-title">Agents <span id="agents-total" class="count">0</span></h2><ul id="agents"></ul></section>
-        <section aria-labelledby="files-title"><h2 id="files-title">Fichiers observés <span id="files-total" class="count">0</span></h2><ul id="files"></ul></section>
-        <section aria-labelledby="activity-title"><h2 id="activity-title">Activité récente</h2><ul id="activity"></ul></section>
+        <section aria-labelledby="context-title"><h2 id="context-title">Contexte <span class="badge">ESTIMATION</span></h2><div class="context-detail"><span id="detail-meter" class="meter" aria-hidden="true"></span><strong id="detail-percent">—</strong></div><p id="context-numbers">En attente des données</p></section>
+        <section aria-labelledby="agents-title"><h2 id="agents-title">Sous-agents de cette session <span id="agents-total" class="count">0</span></h2><ul id="agents"></ul></section>
       </div>
       <footer><span class="live-dot"></span><span id="updated">Actualisation locale · toutes les 2 s</span></footer>
     </aside>
-    <p class="footnote">Panneau compagnon pour Codex Desktop · lecture locale<br>Le plugin ne s’insère pas dans le champ de saisie natif.</p>
+    <p class="footnote">Contexte et sous-agents de la session · lecture locale</p>
   </main>
 </body></html>

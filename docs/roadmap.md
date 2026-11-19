@@ -9,5 +9,5 @@
 - [x] Barre au-dessus du composeur natif et panneau dans la même fenêtre, via une copie locale modifiée sur Linux (`26.1027.30824`).
 - [ ] Remplacer l'adaptateur local par une API publique d'insertion native si une telle API devient disponible.
 - [ ] Ajouter des profils de compatibilité pour les prochaines versions de Codex et d'autres systèmes.
-- [ ] Améliorer l'identification des écritures et des résultats d'outils imbriqués.
+- [x] Limiter le plugin au contexte de la session ouverte et à ses sous-agents, sans sélecteur ni activité de projet.
 - [ ] Ajouter une interface anglaise et des contrôles d'affichage.

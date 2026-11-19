@@ -9,11 +9,12 @@ const assets = new Map([['/', ['index.html', 'text/html']], ['/app.js', ['app.js
 export async function startServer(store, { port = 0 } = {}) {
   const token = randomBytes(32).toString('hex');
   let origin;
-  let refreshing;
-  // Share work among tabs, without retaining a snapshot across refreshes.
+  let scan = Promise.resolve();
+  // Serialize reads without guessing a session when no ID is supplied.
   const snapshot = id => {
-    if (!refreshing) refreshing = store.snapshot().finally(() => { refreshing = null; });
-    return id ? refreshing.then(() => store.snapshot(id)) : refreshing;
+    const result = scan.then(() => store.snapshot(id));
+    scan = result.catch(() => {});
+    return result;
   };
   const server = http.createServer(async (req, res) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');

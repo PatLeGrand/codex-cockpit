@@ -9,9 +9,8 @@ const number = x => Number.isFinite(x) && x >= 0 ? x : null;
 const timestamp = x => typeof x === 'number' ? (x < 1e12 ? x * 1000 : x) : Date.parse(x);
 
 export function emptySession(file) {
-  return { id: null, file, parentId: null, name: '', role: '', cwd: '', startedAt: null,
-    updatedAt: null, status: 'unknown', model: null, context: null, usage: null,
-    limits: null, activities: [], files: [], calls: new Map(), partial: false };
+  return { id: null, file, parentId: null, name: '', role: '', startedAt: null,
+    updatedAt: null, status: 'unknown', context: null, partial: false };
 }
 
 export function applyRecord(s, record) {
@@ -23,9 +22,7 @@ export function applyRecord(s, record) {
     s.parentId = p.parent_thread_id ?? p.source?.subagent?.thread_spawn?.parent_thread_id ?? null;
     s.name = p.agent_nickname ?? p.agent_path ?? s.id?.slice(0, 8) ?? 'Session';
     s.role = p.agent_role ?? (typeof p.source === 'object' ? p.source?.subagent?.other : '') ?? '';
-    s.cwd = p.cwd ?? '';
   }
-  if (record.type === 'turn_context') s.model = p.model ?? s.model;
   if (record.type === 'event_msg') {
     if (p.type === 'task_started') {
       s.status = 'running'; s.startedAt = timestamp(p.started_at ?? record.timestamp);
@@ -39,39 +36,9 @@ export function applyRecord(s, record) {
       const used = number(info.last_token_usage?.total_tokens);
       const window = number(info.model_context_window) ?? s.context?.window;
       s.context = { used, window, percent: used !== null && window > 0 ? Math.round(used / window * 100) : null, estimated: true };
-      s.usage = info.total_token_usage ?? null;
-      s.limits = p.rate_limits ?? null;
     }
   }
-  if (record.type !== 'response_item') return;
-  if (['function_call', 'custom_tool_call'].includes(p.type)) {
-    const call = { id: p.call_id, name: p.name ?? 'outil', status: 'running', at: Number.isFinite(time) ? time : null };
-    s.calls.set(p.call_id, call); s.activities.push(call);
-    let args;
-    try { args = JSON.parse(p.arguments ?? '{}'); } catch { args = {}; }
-    // Only explicit structured edit paths and apply_patch headers are collected.
-    const paths = [];
-    if (/^(write_file|edit_file|write|edit)$/i.test(p.name ?? '')) {
-      const value = args.path ?? args.file_path;
-      if (typeof value === 'string') paths.push(value);
-    }
-    if (/apply_patch/.test(p.name ?? '')) {
-      for (const match of String(p.input ?? args.patch ?? '').matchAll(/^\*\*\* (?:Add|Update|Delete) File: (.+)$/gm)) paths.push(match[1]);
-    }
-    for (const value of paths) if (!s.files.includes(value)) s.files.push(value);
-    if (s.activities.length > 80) {
-      const removed = s.activities.shift(); s.calls.delete(removed.id);
-    }
-    s.files = s.files.slice(-100);
-  }
-  if (['function_call_output', 'custom_tool_call_output'].includes(p.type)) {
-    const call = s.calls.get(p.call_id);
-    if (call) {
-      let output;
-      try { output = typeof p.output === 'string' ? JSON.parse(p.output) : p.output; } catch { /* plain output */ }
-      call.status = output?.isError === true || (typeof output?.exit_code === 'number' && output.exit_code !== 0) ? 'failed' : 'completed';
-    }
-  }
+
 }
 
 async function discover(root) {
@@ -131,8 +98,8 @@ export class SessionStore {
     const keep = new Set(files);
     for (const file of this.cache.keys()) if (!keep.has(file)) this.cache.delete(file);
     sessions.sort((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0));
-    const roots = sessions.filter(s => !s.parentId);
-    const selected = id ? sessions.find(s => s.id === id) : roots[0];
+    // Never guess the current chat from recency or a shared working directory.
+    const selected = id ? sessions.find(s => s.id === id) : null;
     const descendants = new Set(selected ? [selected.id] : []);
     for (let i = 0; i < sessions.length; i++) {
       let changed = false;
@@ -140,13 +107,12 @@ export class SessionStore {
       if (!changed) break;
     }
     const clean = s => {
-      const { file, calls, ...publicSession } = s;
+      const { file, ...publicSession } = s;
       // Log state is historical evidence, not proof a process is still alive.
       return { ...publicSession, stale: s.status === 'running' && Date.now() - (s.updatedAt ?? 0) > 120_000 };
     };
     return {
       generatedAt: Date.now(), source: 'local-rollout', maxSessions: MAX_FILES, unreadable,
-      sessions: roots.map(s => ({ id: s.id, name: s.name, cwd: s.cwd, status: s.status })),
       selected: selected ? clean(selected) : null,
       agents: sessions.filter(s => s.id !== selected?.id && descendants.has(s.id)).map(clean),
     };

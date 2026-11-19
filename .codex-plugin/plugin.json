@@ -1,8 +1,10 @@
 {
   "name": "codex-cockpit",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Cockpit local pour observer le contexte et les sous-agents de Codex Desktop.",
-  "author": { "name": "PatLeGrand" },
+  "author": {
+    "name": "PatLeGrand"
+  },
   "repository": "https://github.com/PatLeGrand/codex-cockpit",
   "license": "MIT",
   "skills": "./skills/"

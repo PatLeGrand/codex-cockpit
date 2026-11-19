@@ -17,18 +17,19 @@ test('context occupancy uses last call, never cumulative billing usage', () => {
   const s = emptySession('');
   applyRecord(s, record('event_msg', { type: 'token_count', info: { total_token_usage: { total_tokens: 900000 }, last_token_usage: { total_tokens: 43000 }, model_context_window: 100000 } }));
   assert.equal(s.context.percent, 43);
-  assert.equal(s.usage.total_tokens, 900000);
+  assert.equal(s.usage, undefined);
   applyRecord(s, record('event_msg', { type: 'token_count', info: { total_token_usage: { total_tokens: 999999 }, model_context_window: 100000 } }));
   assert.equal(s.context.percent, null);
 });
 
-test('tracks lifecycle, structured failures, edits; drops prompts and raw output', () => {
+test('tracks lifecycle while ignoring file paths, commands and raw outputs', () => {
   const s = emptySession('');
   applyRecord(s, record('event_msg', { type: 'task_started', started_at: 1700000000 }));
   applyRecord(s, record('response_item', { type: 'custom_tool_call', name: 'apply_patch', call_id: '1', input: '*** Update File: src/a.js\nPRIVATE-PROMPT' }));
   applyRecord(s, record('response_item', { type: 'custom_tool_call_output', call_id: '1', output: '{"exit_code":1,"output":"SECRET"}' }));
-  assert.deepEqual(s.files, ['src/a.js']);
-  assert.equal(s.activities[0].status, 'failed');
+  assert.equal(s.files, undefined);
+  assert.equal(s.activities, undefined);
+  assert.ok(!JSON.stringify(s).includes('src/a.js'));
   assert.equal(s.startedAt, 1700000000000);
   assert.ok(!JSON.stringify(s).includes('SECRET'));
   assert.ok(!JSON.stringify(s).includes('PRIVATE-PROMPT'));
@@ -58,6 +59,11 @@ test('incremental reader waits for partial lines, follows explicit descendants a
   snapshot = await store.snapshot('root');
   assert.equal(snapshot.selected.status, 'unknown');
   assert.equal((await store.snapshot('missing')).selected, null);
+  const unpinned = await store.snapshot();
+  assert.equal(unpinned.selected, null);
+  assert.deepEqual(unpinned.agents, []);
+  assert.equal(unpinned.sessions, undefined);
+  assert.ok(!JSON.stringify(snapshot).includes('/example'));
 });
 
 test('missing session directories yield an empty state', async () => {
@@ -94,20 +100,24 @@ test('MCP initialization, notification, tool calls, invalid arguments and EOF cl
     { id: 1, method: 'initialize', params: { protocolVersion: '2024-11-05' } },
     { method: 'notifications/initialized' },
     { id: 2, method: 'tools/list' },
-    { id: 3, method: 'tools/call', params: { name: 'open_cockpit' } },
+    { id: 3, method: 'tools/call', params: { name: 'open_cockpit', arguments: { session: 'current-chat' } } },
     { id: 4, method: 'tools/call', params: { name: 'cockpit_snapshot', arguments: { session: 123 } } },
-    { id: 5, method: 'tools/call', params: { name: 'cockpit_snapshot', arguments: {} } },
+    { id: 5, method: 'tools/call', params: { name: 'cockpit_snapshot', arguments: { session: 'current-chat' } } },
+    { id: 6, method: 'tools/call', params: { name: 'open_cockpit', arguments: {} } },
+    { id: 7, method: 'tools/call', params: { name: 'cockpit_snapshot', arguments: {} } },
     null,
   ];
   input.end(requests.map(r => JSON.stringify(r)).join('\n') + '\n');
   for (let n = 0; n < 50 && !closed; n++) await new Promise(resolve => setTimeout(resolve, 10));
   const replies = data.trim().split('\n').map(JSON.parse);
-  assert.equal(replies.length, 6);
+  assert.equal(replies.length, 8);
   assert.equal(replies[0].result.serverInfo.name, 'codex-cockpit');
   assert.equal(replies[1].result.tools.length, 2);
-  assert.equal(replies[2].result.content[0].text, 'http://127.0.0.1/#test');
+  assert.equal(replies[2].result.content[0].text, 'http://127.0.0.1/?session=current-chat#test');
   assert.equal(replies[3].error.code, -32602);
   assert.equal(replies[4].result.structuredContent.source, 'demo');
-  assert.equal(replies[5].error.code, -32600);
+  assert.equal(replies[5].error.code, -32602);
+  assert.equal(replies[6].error.code, -32602);
+  assert.equal(replies[7].error.code, -32600);
   assert.ok(closed);
 });
