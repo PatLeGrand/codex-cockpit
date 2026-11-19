@@ -86,7 +86,7 @@
       const candidates = [...document.querySelectorAll('[data-codex-composer-root][data-cockpit-thread-id]')];
       const next = candidates.find(n => n.getAttribute('data-composer-placement') === 'thread' && n.getBoundingClientRect().width > 0)
         ?? candidates.find(n => n.getBoundingClientRect().width > 0);
-      if (!next) { host?.remove(); portal?.remove(); root = null; currentId = null; return { mounted: false, session: null }; }
+      if (!next) { host?.remove(); portal?.remove(); root = null; currentId = null; return { mounted: false, session: null, composers: document.querySelectorAll('[data-codex-composer-root]').length }; }
       if (!host) make(css);
       if (!portal.isConnected) document.body.append(portal);
       if (next !== root || host.nextSibling !== next) { next.before(host); root = next; }

@@ -16,6 +16,7 @@ exports.isNativeUrl = isNativeUrl;
 exports.attach = function attach() {
   if (attached) return; attached = true;
   const { app, webContents } = require('electron');
+  console.info('[codex-cockpit] native adapter loaded');
   const renderer = readFileSync(path.join(__dirname, 'renderer.js'), 'utf8');
   const css = readFileSync(path.join(__dirname, 'style.css'), 'utf8');
   const storeReady = import(pathToFileURL(path.join(__dirname, 'sessions.mjs')).href).then(({ SessionStore }) => new SessionStore(path.join(process.env.CODEX_HOME || path.join(os.homedir(), '.codex'), 'sessions')));
@@ -26,6 +27,7 @@ exports.attach = function attach() {
     if (contents.getType() !== 'window' || watched.has(contents.id)) return;
     watched.add(contents.id);
     let busy = false, mounted = false, disposed = false;
+    let lastState = '';
     const evaluate = code => contents.executeJavaScriptInIsolatedWorld(WORLD, [{ code }]);
     async function tick() {
       if (busy || disposed || contents.isDestroyed() || contents.isLoadingMainFrame() || !isNativeUrl(contents.getURL())) return;
@@ -33,6 +35,8 @@ exports.attach = function attach() {
       try {
         if (!mounted) { await evaluate(renderer); mounted = true; }
         const state = await evaluate(`globalThis.__codexCockpitNative?.mount(${JSON.stringify(css)})`);
+        const diagnostic = JSON.stringify({ mounted: !!state?.mounted, hasSession: !!state?.session, composers: state?.composers });
+        if (diagnostic !== lastState) { console.info('[codex-cockpit] mount', diagnostic); lastState = diagnostic; }
         if (!state?.mounted || !state.session) return;
         const store = await storeReady;
         const result = scan.then(() => store.snapshot(state.session));
