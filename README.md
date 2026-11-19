@@ -7,7 +7,7 @@ Une barre au-dessus du champ de saisie de **Codex Desktop**, pour voir uniquemen
 
 Le nombre total inclut les sous-agents terminés ; le nombre actif est indiqué séparément. La barre suit l’identifiant de la conversation ouverte. Aucun sélecteur de sessions, suivi de la session la plus récente, fichier, commande ou journal d’activité n’est affiché ni renvoyé par l’API.
 
-Projet communautaire indépendant, sans affiliation avec OpenAI. **Version 0.3.1**.
+Projet communautaire indépendant, sans affiliation avec OpenAI. **Version 0.3.2**.
 
 ## Installation native Linux
 

@@ -2,33 +2,59 @@
 set -eu
 app_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 expected="$app_dir/ChatGPT"
-conflict=''
-# Only inspect this user's main Codex processes. Never stop an active chat.
-for pid in $(pgrep -u "$(id -u)" -x ChatGPT 2>/dev/null || true); do
-    executable=$(readlink "/proc/$pid/exe" 2>/dev/null || true)
-    [ -n "$executable" ] || continue
-    arguments=$(tr '\000' ' ' < "/proc/$pid/cmdline" 2>/dev/null || true)
-    case "$arguments" in *--type=*) continue ;; esac
-    case "$arguments" in
-        *--user-data-dir=*)
-            case "$arguments" in *--user-data-dir="${XDG_CONFIG_HOME:-$HOME/.config}/Codex"*) ;; *) continue ;; esac
-            ;;
-    esac
-    if [ "$executable" != "$expected" ]; then
-        conflict="PID $pid : $executable"
-        break
-    fi
-done
+find_conflict() {
+    conflict=''
+    for pid in $(pgrep -u "$(id -u)" -x ChatGPT 2>/dev/null || true); do
+        executable=$(readlink "/proc/$pid/exe" 2>/dev/null || true)
+        [ -n "$executable" ] || continue
+        arguments=$(tr '\000' ' ' < "/proc/$pid/cmdline" 2>/dev/null || true)
+        case "$arguments" in *--type=*) continue ;; esac
+        case "$arguments" in
+            *--user-data-dir=*)
+                case "$arguments" in *--user-data-dir="${XDG_CONFIG_HOME:-$HOME/.config}/Codex"*) ;; *) continue ;; esac
+                ;;
+        esac
+        if [ "$executable" != "$expected" ]; then conflict="PID $pid : $executable"; break; fi
+    done
+}
+notify() {
+    if command -v notify-send >/dev/null 2>&1; then notify-send 'Codex Cockpit' "$1" || true; fi
+}
+find_conflict
 if [ "${1:-}" = '--diagnose' ]; then
     printf 'Lanceur Cockpit : %s\n' "$expected"
     if [ -n "$conflict" ]; then printf 'Codex d’origine est encore ouvert : %s\n' "$conflict"; else printf 'Aucune instance d’origine détectée.\n'; fi
     exit 0
 fi
-if [ -n "$conflict" ]; then
-    message='Ferme complètement Codex, puis ouvre « Codex Cockpit » depuis le menu des applications.'
-    printf '%s\n%s\n' "$message" "$conflict" >&2
-    if command -v notify-send >/dev/null 2>&1; then notify-send 'Codex Cockpit — relance nécessaire' "$message" || true; fi
+umask 077
+if [ "${1:-}" = '--await-close' ]; then
+    shift
+    exec 9>"$app_dir/.cockpit-launch.lock"
+    flock -n 9 || exit 0
+    attempts=0
+    while [ -n "$conflict" ]; do
+        if [ "$attempts" -ge 600 ]; then notify 'Ouverture annulée après 10 minutes : Codex était toujours ouvert.'; exit 75; fi
+        sleep 1
+        attempts=$((attempts + 1))
+        find_conflict
+    done
+    # Let the old application's remaining processes release its profile.
+    sleep 2
+elif [ -n "$conflict" ]; then
+    # A user service survives closing the Codex window that scheduled this launch.
+    if command -v systemd-run >/dev/null 2>&1; then
+        if ! systemctl --user is-active --quiet codex-cockpit-launch.service; then
+            systemd-run --user --collect --unit=codex-cockpit-launch \
+                --setenv="DISPLAY=${DISPLAY:-}" --setenv="WAYLAND_DISPLAY=${WAYLAND_DISPLAY:-}" \
+                --setenv="XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-}" \
+                "$app_dir/launch-cockpit" --await-close "$@" >> "$app_dir/cockpit-launch.log" 2>&1
+        fi
+        notify 'Cockpit est prêt. Quitte Codex via le menu Quitter ; Cockpit s’ouvrira automatiquement.'
+        printf 'Ouverture programmée après fermeture de Codex.\n'
+        exit 0
+    fi
+    printf 'Quitte complètement Codex, puis relance Codex Cockpit.\n' >&2
+    notify 'Quitte complètement Codex, puis relance Codex Cockpit.'
     exit 75
 fi
-umask 077
 exec "$expected" "$@" >> "$app_dir/cockpit-launch.log" 2>&1

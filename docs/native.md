@@ -11,7 +11,7 @@ python3 scripts/prepare-native.py --check
 python3 scripts/prepare-native.py --source /usr/lib/chatgpt --destination /chemin/neuf/codex-cockpit-desktop
 ```
 
-Ferme complètement Codex, y compris les autres fenêtres, puis lance `/chemin/neuf/codex-cockpit-desktop/launch-cockpit`. Si Codex d'origine tourne encore, le lanceur s'arrête avec un message et, si disponible, une notification. La relance reprend le profil habituel de Codex ; ne fais pas fonctionner deux profils identiques simultanément.
+Ferme complètement Codex, y compris les autres fenêtres, puis lance `/chemin/neuf/codex-cockpit-desktop/launch-cockpit`. Si Codex d'origine tourne encore, le lanceur programme l'ouverture via un service utilisateur et affiche une notification : quitte Codex avec le menu Quitter et Cockpit s'ouvrira automatiquement. L'attente expire après dix minutes. Sans systemd utilisateur, le lanceur demande une relance manuelle. La relance reprend le profil habituel de Codex ; ne fais pas fonctionner deux profils identiques simultanément.
 
 `launch-cockpit --diagnose` indique le chemin attendu et l'éventuelle instance d'origine encore ouverte. Le journal de lancement est conservé dans `cockpit-launch.log` à côté du lanceur ; il reste local et ne doit pas être publié sans vérification.
 
