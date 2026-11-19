@@ -11,7 +11,9 @@ python3 scripts/prepare-native.py --check
 python3 scripts/prepare-native.py --source /usr/lib/chatgpt --destination /chemin/neuf/codex-cockpit-desktop
 ```
 
-Ferme complètement Codex, y compris les autres fenêtres, puis lance `/chemin/neuf/codex-cockpit-desktop/launch-cockpit`. Si Codex d'origine tourne encore, le lanceur peut simplement lui transmettre l'ouverture : la barre ne sera alors pas activée. La relance reprend le profil habituel de Codex ; ne fais pas fonctionner deux profils identiques simultanément.
+Ferme complètement Codex, y compris les autres fenêtres, puis lance `/chemin/neuf/codex-cockpit-desktop/launch-cockpit`. Si Codex d'origine tourne encore, le lanceur s'arrête avec un message et, si disponible, une notification. La relance reprend le profil habituel de Codex ; ne fais pas fonctionner deux profils identiques simultanément.
+
+`launch-cockpit --diagnose` indique le chemin attendu et l'éventuelle instance d'origine encore ouverte. Le journal de lancement est conservé dans `cockpit-launch.log` à côté du lanceur ; il reste local et ne doit pas être publié sans vérification.
 
 Le mode natif n'a besoin ni de Node installé séparément, ni du serveur MCP ou HTTP, ni d'une clé API. La préparation crée environ 1 Go de fichiers, dont une copie de l'exécutable et une archive modifiée. Les autres ressources restent liées à l'installation système. Conserve cette dernière installée.
 

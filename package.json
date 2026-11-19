@@ -1,6 +1,6 @@
 {
   "name": "codex-cockpit",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
   "description": "Local context and agent cockpit for Codex Desktop",
   "type": "module",

@@ -1,0 +1,34 @@
+#!/bin/sh
+set -eu
+app_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+expected="$app_dir/ChatGPT"
+conflict=''
+# Only inspect this user's main Codex processes. Never stop an active chat.
+for pid in $(pgrep -u "$(id -u)" -x ChatGPT 2>/dev/null || true); do
+    executable=$(readlink "/proc/$pid/exe" 2>/dev/null || true)
+    [ -n "$executable" ] || continue
+    arguments=$(tr '\000' ' ' < "/proc/$pid/cmdline" 2>/dev/null || true)
+    case "$arguments" in *--type=*) continue ;; esac
+    case "$arguments" in
+        *--user-data-dir=*)
+            case "$arguments" in *--user-data-dir="${XDG_CONFIG_HOME:-$HOME/.config}/Codex"*) ;; *) continue ;; esac
+            ;;
+    esac
+    if [ "$executable" != "$expected" ]; then
+        conflict="PID $pid : $executable"
+        break
+    fi
+done
+if [ "${1:-}" = '--diagnose' ]; then
+    printf 'Lanceur Cockpit : %s\n' "$expected"
+    if [ -n "$conflict" ]; then printf 'Codex d’origine est encore ouvert : %s\n' "$conflict"; else printf 'Aucune instance d’origine détectée.\n'; fi
+    exit 0
+fi
+if [ -n "$conflict" ]; then
+    message='Ferme complètement Codex, puis ouvre « Codex Cockpit » depuis le menu des applications.'
+    printf '%s\n%s\n' "$message" "$conflict" >&2
+    if command -v notify-send >/dev/null 2>&1; then notify-send 'Codex Cockpit — relance nécessaire' "$message" || true; fi
+    exit 75
+fi
+umask 077
+exec "$expected" "$@" >> "$app_dir/cockpit-launch.log" 2>&1

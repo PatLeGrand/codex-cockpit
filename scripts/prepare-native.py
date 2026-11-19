@@ -156,7 +156,7 @@ def prepare(source, destination):
         manifest = {'codexVersion': VERSION, 'cockpitVersion': json.loads((repo / 'package.json').read_text())['version'], 'source': str(source), 'mode': 'native-local-copy', 'sourceHashes': HASHES}
         (staging / 'cockpit-install.json').write_text(json.dumps(manifest, indent=2) + '\n')
         launcher = staging / 'launch-cockpit'
-        launcher.write_text('#!/bin/sh\nset -eu\nexec "$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)/ChatGPT" "$@"\n')
+        shutil.copy2(repo / 'native/launch-cockpit', launcher)
         launcher.chmod(0o755)
         staging.rename(destination)
     except BaseException:

@@ -1,6 +1,6 @@
 {
   "name": "codex-cockpit",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Cockpit local pour observer le contexte et les sous-agents de Codex Desktop.",
   "author": {
     "name": "PatLeGrand"
