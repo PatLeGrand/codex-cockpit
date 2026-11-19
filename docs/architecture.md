@@ -14,6 +14,6 @@
 - Au plus 8 Mio lus par fichier et par cycle. Une ligne de plus de 4 Mio est ignorée et signalée ; une fin de ligne partielle est relue au cycle suivant.
 - Le journal n'est pas une sonde du processus : un arrêt brutal peut laisser un dernier état en cours.
 - Les outils appelés dans du code imbriqué peuvent apparaître uniquement sous leur enveloppe `exec` ; aucun parsing de code ou de commandes shell n'est effectué.
-- Le point d'insertion natif au-dessus du composeur n'est pas disponible dans cette version. Le composant web pourra être adapté si une interface publique appropriée est fournie.
+- Le mode natif utilise un adaptateur local lié à une version précise de l'application ; il ne constitue pas une API de plugin officielle. Voir [intégration native](native.md).
 
 Pour maintenir l'adaptateur, ajouter un cas synthétique au lecteur et tester le format avant de changer son interprétation. Ne jamais inclure de journaux réels dans le dépôt.

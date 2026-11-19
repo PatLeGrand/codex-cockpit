@@ -2,7 +2,28 @@
 
 Un Cockpit local pour **Codex Desktop** : barre de contexte compacte, petite flèche pour ouvrir les détails, agents, fichiers et activité récente. Projet communautaire indépendant, sans affiliation avec OpenAI.
 
-**État : v0.1.0, panneau compagnon fonctionnel.** La barre et la flèche vivent dans le panneau Cockpit. L'insertion directement au-dessus du champ de saisie natif de Codex n'est pas implémentée : aucun point d'extension documenté n'a été identifié pour cet emplacement. Cette limite est suivie dans la feuille de route.
+**v0.2.0 : intégration au-dessus du champ de saisie natif sur Linux.** La flèche ouvre le panneau Cockpit dans la même fenêtre. Cette intégration utilise une copie locale modifiée de Codex, avec un adaptateur vérifié pour la version `26.1027.30824`. Le mode compagnon et le plugin MCP restent disponibles.
+
+## Barre dans Codex Desktop
+
+Prérequis : Linux, Python 3.9+, Codex Desktop `26.1027.30824` installé dans `/usr/lib/chatgpt`. La préparation ne nécessite pas Node ; l'adaptateur utilise le runtime intégré de Codex.
+
+```bash
+python3 scripts/prepare-native.py --check
+python3 scripts/prepare-native.py --destination "$PWD/../codex-cockpit-desktop"
+```
+
+Ferme complètement Codex Desktop, puis lance la copie préparée :
+
+```bash
+../codex-cockpit-desktop/launch-cockpit
+```
+
+La barre apparaît au-dessus du composeur d'une conversation Codex. Clique sur sa flèche pour afficher les agents, fichiers et outils dans le panneau. Elle suit la conversation ouverte et ne lit ni ne modifie le brouillon. Le mode natif ne démarre aucun serveur HTTP.
+
+L'application système reste intacte. Pour revenir à Codex d'origine, ferme la copie et utilise le lanceur habituel. Après une mise à jour de Codex, vérifie la compatibilité avant de recréer la copie dans un nouveau dossier. Les versions non reconnues sont refusées avant toute création de fichier. Voir [installation native et limites](docs/native.md).
+
+![Barre et panneau natifs dans un banc de test aux données fictives](docs/native-preview.png)
 
 ## Démarrage
 
@@ -18,12 +39,12 @@ Ouvre l'URL affichée. Clique sur la petite flèche à droite de la barre pour o
 
 ```bash
 node src/cli.mjs --demo # aperçu avec données fictives, signalé dans l'interface
-node --test             # tests
+npm test                # tests Node + Python
 ```
 
 ## Plugin Codex Desktop
 
-Ce dépôt fournit un manifeste de compatibilité Codex, un catalogue et un serveur MCP local stdio. Ajoute le catalogue :
+Ce mode ouvre le panneau compagnon dans un onglet ; pour la barre native, utilise la procédure précédente. Le dépôt fournit un manifeste de compatibilité Codex, un catalogue et un serveur MCP local stdio. Ajoute le catalogue :
 
 ```bash
 codex plugin marketplace add PatLeGrand/codex-cockpit

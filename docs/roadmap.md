@@ -6,6 +6,8 @@
 - [ ] Valider l'installation du catalogue dans plusieurs versions de Codex Desktop.
 - [ ] Ajouter des fixtures synthétiques pour les formats de sessions paginées.
 - [ ] Étudier un adaptateur App Server sans créer de tour ni modifier de conversation.
-- [ ] Intégrer la barre au-dessus du champ de saisie natif si une interface d'extension adaptée devient disponible. Aucun patch des fichiers de l'application n'est livré.
+- [x] Barre au-dessus du composeur natif et panneau dans la même fenêtre, via une copie locale modifiée sur Linux (`26.1027.30824`).
+- [ ] Remplacer l'adaptateur local par une API publique d'insertion native si une telle API devient disponible.
+- [ ] Ajouter des profils de compatibilité pour les prochaines versions de Codex et d'autres systèmes.
 - [ ] Améliorer l'identification des écritures et des résultats d'outils imbriqués.
 - [ ] Ajouter une interface anglaise et des contrôles d'affichage.
